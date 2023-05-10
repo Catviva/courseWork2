@@ -27,6 +27,9 @@ public class Main {
             }
         }
     }
+    private static void addTask(){
+
+    }
     private static void printTask() {
         System.out.println("Добавить задачу. Удалить задачу. Выбрать задачу по дате.");
     }

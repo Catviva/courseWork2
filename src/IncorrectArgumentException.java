@@ -1,5 +1,5 @@
 public class IncorrectArgumentException extends RuntimeException{
-    public IncorrectArgumentException() {
+    public IncorrectArgumentException(String некорректный_ввод) {
     }
 
     @Override

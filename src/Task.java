@@ -1,7 +1,11 @@
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Repeatable;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class Task {
+public class Task implements Repeatable {
 
     private int idGenerator;
     private String title;
@@ -10,8 +14,9 @@ public class Task {
     private LocalDateTime dateTime;
     private String description;
 
+
     public Task(int idGenerator, String title, Type type,
-                int id, LocalDateTime dateTime, String description) {
+                int id, LocalDateTime dateTime, String description) throws IncorrectArgumentException {
         this.idGenerator = idGenerator;
         this.title = title;
         this.type = type;
@@ -47,6 +52,9 @@ public class Task {
     public void setDescription(String description) {
         this.description = description;
     }
+    public boolean checkOccurance(LocalDateTime requestedDate) {
+        return getDateTime().getDayOfWeek().equals(requestedDate.getDayOfWeek());
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -71,5 +79,15 @@ public class Task {
                 ", dateTime=" + dateTime +
                 ", description='" + description + '\'' +
                 '}';
+    }
+
+    @Override
+    public Class<? extends Annotation> annotationType() {
+        return null;
+    }
+
+    @Override
+    public Class<? extends Annotation> value() {
+        return null;
     }
 }
