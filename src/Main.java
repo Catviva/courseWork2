@@ -1,36 +1,30 @@
+import utilities.TaskService;
+
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
         try (Scanner scanner = new Scanner(System.in)) {
-            label:
             while (true) {
-                System.out.println("Выберите задачу");
+                System.out.println("Выберите задачу:");
                 printTask();
-                if (scanner.hasNextInt()){
-                    int task = scanner.nextInt();
-                    switch (task) {
+                    int action = scanner.nextInt();
+                    switch (action) {
                         case 1:
                             TaskService.addTask(scanner);
                             break;
                         case 2:
-                            TaskService.removeTask(scanner);
+                            TaskService.deleteTask(scanner);
                             break;
                         case 3:
-                            TaskService.getAllByDate(scanner);
-                            break label;
+                            TaskService.getTasksByDay(scanner);
+                            break;
                     }
-                } else {
-                    scanner.next();
-                    System.out.println("Выберите задачу");
                 }
             }
         }
-    }
-    private static void addTask(){
-
-    }
     private static void printTask() {
-        System.out.println("Добавить задачу. Удалить задачу. Выбрать задачу по дате.");
+
+        System.out.println("Добавить  - 1. \nУдалить  - 2. \nВыбрать по дате - 3.");
     }
 }

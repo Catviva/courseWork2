@@ -1,3 +1,7 @@
+package utilities;
+
+import exceptions.IncorrectArgumentException;
+
 public class ValidateUtils {
 
     public static String checkString(String str) throws IncorrectArgumentException {

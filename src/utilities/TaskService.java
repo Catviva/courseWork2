@@ -1,3 +1,9 @@
+package utilities;
+
+import exceptions.IncorrectArgumentException;
+import exceptions.TaskNotFoundException;
+import tasks.*;
+
 import java.lang.annotation.Repeatable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -9,7 +15,8 @@ public class TaskService {
 
     private static Map<Integer, Task> taskMap = new HashMap<>();
 
-    private static List<Task> removedTasks = new ArrayList <>();
+    private static List <Task> removedTasksList = new ArrayList <>();
+
 
     public static void addTask(Scanner scanner) {
 
@@ -17,17 +24,22 @@ public class TaskService {
             scanner.nextLine();
             System.out.print("Введите название задачи: ");
             String title = ValidateUtils.checkString(scanner.nextLine());
+
             System.out.println("Введите описание задачи: ");
             String description = ValidateUtils.checkString(scanner.nextLine());
+
             System.out.println(" Введите тип задачи: 0 - Рабочая 1 - Личная");
             Type type = Type.values()[scanner.nextInt()];
+
             System.out.println("Введите повторяемость задачи:  0 - Однократная, 1 - Ежедневная, 2 - Еженедельная, 3 - Ежемесячная, 4 - Ежегодная");
             int occurance = scanner.nextInt();
+
             System.out.println("Введите дату dd.MM.yyyy HH:mm ");
-            scanner.nextLine();
+
             createEvent(scanner, title, description, type, occurance);
             System.out.println("Для выхода нажмите Enter\n");
             scanner.nextLine();
+
         } catch (IncorrectArgumentException e) {
             System.out.println(e.getMessage());
         }
@@ -37,32 +49,30 @@ public class TaskService {
     private static void createEvent(Scanner scanner, String title, String description,
                                     Type type, int occurance) {
         try {
+            scanner.nextLine();
             LocalDateTime eventDate = LocalDateTime.parse(scanner.nextLine(),
                     DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
-            Repeatable task = null;
-            try {
-                task = createTask(occurance, title, description, type, eventDate);
-                System.out.println("Создана задача " + task);
+
+            createTask(occurance, title, description, type, eventDate);
+
             } catch (IncorrectArgumentException e) {
                 System.out.println(e.getMessage());
-            }
 
         } catch (DateTimeParseException e) {
-            System.out.println("Проверьте формат dd.MM.yyyy HH:mm и попробуйте еще раз");
-            createEvent(scanner, title, description, type, occurance);
+            System.out.println("Неподходящий формат");
         }
     }
 
     public static void deleteTask(Scanner scanner) {
         System.out.println("Текущие задачи\n");
-        printActualTasks();
+        printCurrentTasks();
         try {
             System.out.println("Для удаления введите Id задачи\n");
             int id = scanner.nextInt();
             if (taskMap.containsKey(id)) {
-                Repeatable removedTask = taskMap.get(id);
-                removedTask.setArchived(true);
-                archivedTasks.put(id, removedTask);
+                Task removedTask = taskMap.get(id);
+                removedTasksList.add(removedTask);
+                taskMap.remove(id);
                 System.out.println("Задача " + id + " удалена\n");
             } else {
                 throw new TaskNotFoundException();
@@ -80,9 +90,9 @@ public class TaskService {
             String date = scanner.next();
             DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
             LocalDate requestedDate = LocalDate.parse(date, dateFormatter);
-            List<Repeatable> foundEvents = findTasksByDate(requestedDate);
+            List<Task> foundEvents = findTasksByDate(requestedDate);
             System.out.println("События на " + requestedDate + ":");
-            for (Repeatable task : foundEvents) {
+            for (Task task : foundEvents) {
                 System.out.println(task);
             }
         } catch (DateTimeParseException e) {
@@ -93,82 +103,67 @@ public class TaskService {
 
     }
 
-    public static void printArchivedTasks() {
-        for (Repeatable task : archivedTasks.values()) {
+    public static void printRemovedTasks() {
+        for (Task task : removedTasksList) {
             System.out.println(task);
+
         }
     }
 
-    public static void getGroupedByDate() {
-        Map<LocalDate, ArrayList<Repeatable>> taskMap = new HashMap<>();
 
-        for (Map.Entry<Integer, Repeatable> entry : taskMap.entrySet()) {
-            Repeatable task = entry.getValue();
-            LocalDate localDate = task.getFirstDate().toLocalDate();
-            if (taskMap.containsKey(localDate)) {
-                ArrayList<Repeatable> tasks = taskMap.get(localDate);
-                tasks.add(task);
-            } else {
-                taskMap.put(localDate, new ArrayList<>(Collections.singletonList(task)));
-            }
-        }
-        for (Map.Entry<LocalDate, ArrayList<Repeatable>> taskEntry : taskMap.entrySet()) {
-            System.out.println(taskEntry.getKey() + " : " + taskEntry.getValue());
-        }
-    }
-
-    private static List<Repeatable> findTasksByDate(LocalDate date) {
-        List<Repeatable> tasks = new ArrayList<>();
-        for (Task task : taskMap.values()) {
-            if (task.checkOccurance(date.atStartOfDay())) {
-                tasks.add(task);
+    private static List<Task> findTasksByDate(LocalDate date) {
+        List<Task> tasks = new ArrayList<>();
+        for (Task currentTask : taskMap.values()) {
+            if (currentTask.getDateTime().toLocalDate().equals(date)) {
+                tasks.add(currentTask);
             }
         }
         return tasks;
     }
 
-    private static Repeatable createTask(int occurance, String title, String description,
-                                         Type type, LocalDateTime localDateTime) throws IncorrectArgumentException {
-        return switch (occurance) {
-            case 0 -> {
+    private static void createTask(int occurance,
+                                   String title,
+                                   String description,
+                                   Type type,
+                                   LocalDateTime localDateTime)
+            throws IncorrectArgumentException {
+    switch (occurance) {
+        case 0 : {
                 OneTimeTask oneTimeTask = new OneTimeTask (title, description, type, localDateTime);
-                taskMap.put(oncelyTask.getId(), oncelyTask);
-                yield oneT;
+                taskMap.put(oneTimeTask.getId(), oneTimeTask);
+                break;
             }
-            case 1 -> {
+        case 1 : {
                 DailyTask task = new DailyTask (title, description, type, localDateTime);
-                actualTasks.put(task.getId(), task);
-                yield task;
+                taskMap.put(task.getId(), task);
+                break;
+
             }
-            case 2 -> {
+        case 2 : {
                 WeeklyTask task = new WeeklyTask(title, description, type, localDateTime);
-                actualTasks.put(task.getId(), task);
-                yield task;
+                taskMap.put(task.getId(), task);
+                break;
+
             }
-            case 3 -> {
+        case 3 : {
                 MonthlyTask task = new MonthlyTask(title, description, type, localDateTime);
-                actualTasks.put(task.getId(), task);
-                yield task;
+                taskMap.put(task.getId(), task);
+                break;
             }
-            case 4 -> {
+        case 4 : {
                 YearlyTask task = new YearlyTask(title, description, type, localDateTime);
-                actualTasks.put(task.getId(), task);
-                yield task;
+                taskMap.put(task.getId(), task);
+                break;
             }
-            default -> null;
+
         };
     }
 
-    private static void printActualTasks() {
-        for (Repeatable task : actualTasks.values()) {
-            System.out.println(task);
+    private static void printCurrentTasks() {
+        for (Task taskEntry : taskMap.values()) {
+            System.out.println(taskEntry);
         }
     }
 
-    public static void removeTask(Scanner scanner) {
-    }
 
-    public static void getAllByDate(Scanner scanner) {
-
-    }
 }
